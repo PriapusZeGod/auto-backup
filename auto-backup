@@ -1,0 +1,26 @@
+#!/bin/bash
+
+primaryDirectory="$HOME/Documents"
+secondaryDirectory="$HOME/Backups"
+
+echo "Greetings, $USER"
+echo "Starting Backup Script..."
+echo "$primaryDirectory"
+echo "$secondaryDirectory"
+
+# Checking for Documents directory
+if [ -d $primaryDirectory ]; then
+  echo "Documents directory FOUND, commencing backup.."
+else
+  echo "Dcouments directory NOT FOUND, aborting backup..." 1>&2
+  exit 1
+fi
+
+# Checking for Backups directory
+if [ -d $secondaryDirectory ]; then
+  echo "Backups directory FOUND, continuing backup..."
+else
+  echo "Backups directory NOT FOUND, creating it..."
+  mkdir $secondaryDirectory
+  echo "Backups directory was created, continuing backup..."
+fi
