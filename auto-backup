@@ -2,6 +2,8 @@
 
 primaryDirectory="$HOME/Documents"
 secondaryDirectory="$HOME/Backups"
+today=$(date +"%Y-%m-%d")
+nameArchive="$secondaryDirectory/$today-Backup-Documents"
 
 echo "Greetings, $USER"
 echo "Starting Backup Script..."
@@ -16,6 +18,12 @@ else
   exit 1
 fi
 
+# Check if Documents directory is empty
+if [ -z "$(find "$primaryDirectory" -mindepth 1 -print -quit)" ]; then
+  echo "Documents directory is EMPTY, aborting backup..." 1>&2
+  exit 1
+fi
+
 # Checking for Backups directory
 if [ -d $secondaryDirectory ]; then
   echo "Backups directory FOUND, continuing backup..."
@@ -24,3 +32,8 @@ else
   mkdir $secondaryDirectory
   echo "Backups directory was created, continuing backup..."
 fi
+
+# Archiving the directory
+tar -czvf "$nameArchive.tar.gz" -C "$primaryDirectory" .
+echo "Backup created"
+
