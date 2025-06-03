@@ -2,38 +2,78 @@
 
 primaryDirectory="$HOME/Documents"
 secondaryDirectory="$HOME/Backups"
+logDirectory="$secondaryDirectory/Logs"
 today=$(date +"%Y-%m-%d")
-nameArchive="$secondaryDirectory/$today-Backup-Documents"
+nameArchive="$secondaryDirectory/${today}-Backup-Documents"
+nameFile="$logDirectory/$today.log"
 
-echo "Greetings, $USER"
-echo "Starting Backup Script..."
-echo "$primaryDirectory"
-echo "$secondaryDirectory"
+# Function: Check if primary directory exists
+check_Primary_Directory_Exists() {
+  if [ -d "$primaryDirectory" ]; then
+    echo "Documents directory FOUND, commencing backup.."
+  else
+    echo "Documents directory NOT FOUND, aborting backup..." 1>&2
+    exit 1
+  fi
+}
 
-# Checking for Documents directory
-if [ -d $primaryDirectory ]; then
-  echo "Documents directory FOUND, commencing backup.."
-else
-  echo "Dcouments directory NOT FOUND, aborting backup..." 1>&2
-  exit 1
-fi
+# Function: Check if primary directory is empty
+check_Directory_Empty() {
+  if [ -z "$(find "$1" -mindepth 1 -print -quit)" ]; then
+    echo "$1 directory is EMPTY, aborting backup..." 1>&2
+    exit 1
+  fi
+}
 
-# Check if Documents directory is empty
-if [ -z "$(find "$primaryDirectory" -mindepth 1 -print -quit)" ]; then
-  echo "Documents directory is EMPTY, aborting backup..." 1>&2
-  exit 1
-fi
+# Function: Check/create secondary and Logs directories
+check_Secondary_Directory_Exists() {
+  if [ -d "$secondaryDirectory" ]; then
+    echo "Backups directory FOUND, continuing backup..."
+  else
+    echo "Backups directory NOT FOUND, creating it..."
+    mkdir -p "$secondaryDirectory"
+    echo "Backups directory was created, continuing backup..."
+  fi
 
-# Checking for Backups directory
-if [ -d $secondaryDirectory ]; then
-  echo "Backups directory FOUND, continuing backup..."
-else
-  echo "Backups directory NOT FOUND, creating it..."
-  mkdir $secondaryDirectory
-  echo "Backups directory was created, continuing backup..."
-fi
+  if [ ! -d "$logDirectory" ]; then
+    echo "Logs directory NOT FOUND, creating it..."
+    mkdir -p "$logDirectory"
+    echo "Logs directory was created."
+  fi
+}
 
-# Archiving the directory
-tar -czvf "$nameArchive.tar.gz" -C "$primaryDirectory" .
-echo "Backup created"
+# Function: Archive the primary directory
+archive_backup() {
+  tar -czvf "$nameArchive.tar.gz" -C "$primaryDirectory" .
+  echo "Backup created at: $nameArchive.tar.gz"
+}
+
+# Function: Write the log
+log_setup() {
+cat <<- _EOF_
+Greetings, $USER
+Starting Backup Script...
+
+Directory to be Backed up: $primaryDirectory
+Storage Directory for backup: $secondaryDirectory
+Backup file created at: $nameArchive.tar.gz
+Log saved to: $nameFile
+
+_EOF_
+}
+
+#-------Script Execution-------
+
+# Checks
+check_Primary_Directory_Exists
+check_Directory_Empty "$primaryDirectory"
+check_Secondary_Directory_Exists
+
+# Archive the directory
+archive_backup
+
+# Write to log file
+log_setup > "$nameFile"
+
+echo "Backup process complete. Log saved to $nameFile"
 
