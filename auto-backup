@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -euo pipefail
+IFS=$'\n\t'
+
 primaryDirectory="$HOME/Documents"
 secondaryDirectory="$HOME/Backups"
 logDirectory="$secondaryDirectory/Logs"
@@ -44,8 +47,12 @@ check_Secondary_Directory_Exists() {
 
 # Function: Archive the primary directory
 archive_backup() {
-  tar -czvf "$nameArchive.tar.gz" -C "$primaryDirectory" .
-  echo "Backup created at: $nameArchive.tar.gz"
+  if tar -czvf "$nameArchive.tar.gz" -C "$primaryDirectory" .; then
+    echo "Backup created at: $nameArchive.tar.gz"
+  else
+    echo "Error during creation" 1>&2
+    exit 1;
+  fi
 }
 
 # Check if space available for backup
