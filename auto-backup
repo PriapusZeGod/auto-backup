@@ -3,7 +3,7 @@
 primaryDirectory="$HOME/Documents"
 secondaryDirectory="$HOME/Backups"
 logDirectory="$secondaryDirectory/Logs"
-today=$(date +"%Y-%m-%d")
+today=$(date +"%Y-%m-%d-%H-%M-%S")
 nameArchive="$secondaryDirectory/${today}-Backup-Documents"
 nameFile="$logDirectory/$today.log"
 
@@ -46,6 +46,26 @@ check_Secondary_Directory_Exists() {
 archive_backup() {
   tar -czvf "$nameArchive.tar.gz" -C "$primaryDirectory" .
   echo "Backup created at: $nameArchive.tar.gz"
+}
+
+# Check if space available for backup
+check_space_archieve() {
+  # Get estimated size in kilobytes
+  estimated_size_kb=$(du -sk "$primaryDirectory" | cut -f1)
+
+  # Get available space in kilobytes on the destination filesystem
+  available_space_kb=$(df -k "$secondaryDirectory" | awk 'NR==2 {print $4}')
+
+  # Add a safety margin (e.g., 10%)
+  safety_margin_kb=$((estimated_size_kb / 10))
+  required_space_kb=$((estimated_size_kb + safety_margin_kb))
+
+  # Check if there's enough space
+  if [ "$available_space_kb" -lt "$required_space_kb" ]; then
+    echo "Not enough disk space to perform backup!"
+    echo "Required: $required_space_kb KB, Available: $available_space_kb KB" 1>&2
+    exit 1
+  fi
 }
 
 # Function: Write the log
